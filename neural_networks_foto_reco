@@ -1,0 +1,116 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+
+from imports_for_ML import load_images
+
+import os
+img_dir = r'C:\Users\mikoo\Documents\python\python_final_pro\train\train'
+images = os.listdir(img_dir)
+images[:3]
+
+full_images = [os.path.join(img_dir, img) for img in images]
+
+full_images[:3]
+
+len(full_images)
+
+full_images
+cat_or_dog = 'dog'
+image_index = 1122
+img_file = '{}.{}.{}'.format(cat_or_dog, str(image_index), 'jpg')
+
+img = load_img(os.path.join(img_dir, img_file))
+
+#loading images
+
+X, y = load_images(img_dir, n_images=12000, resize=(50, 50))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=20)
+from keras.models import Sequential
+from keras.layers import Dense
+
+from keras.layers import Conv2D, MaxPooling2D, Flatten
+
+#model making
+
+model = Sequential([
+
+    Conv2D(42,(3,3), activation = 'relu' ), 
+    Conv2D(42,(3,3), activation = 'relu' ),
+    MaxPooling2D((3,3)),
+    Conv2D(84,(3,3), activation = 'relu' ),
+    Conv2D(168,(3,3), activation = 'relu' ),
+    Conv2D(336,(3,3), activation = 'relu'),
+    MaxPooling2D((3,3)),
+    Flatten( input_shape = (5, 5, 336)),
+
+
+#training
+
+history = model.fit(X_train, y_train, epochs = 12, validation_split = 0.1)
+
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_loss'])
+plt.title('TRAIN model accuracy and val loss')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['Train Acc', 'val Loss'], loc='upper left')
+plt.show()
+
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['loss'])
+plt.title('TRAIN model accuracy and loss')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['Train Acc', 'Loss'], loc='upper left')
+plt.show()
+
+#testing
+#history = model.fit(X_test, y_test, epochs = 12, validation_split = 0.1)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['loss'])
+plt.title('TEST model accuracy and loss')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['Test Acc', 'Loss'], loc='upper left')
+plt.show()
+print('Accuracy on the training data:')
+print(model.evaluate(X_train, y_train)[1])
+
+print('\nAccuracy on the test data:')
+print(model.evaluate(X_test, y_test)[1])
+
+#saving the model
+import keras
+keras.models.save_model(model=model, filepath=r'C:\Users\mikoo\Desktop\Cats_and_dogs', 
+                           save_format='h5')
+
+#random photo recognition
+
+img = load_img(r'C:\Users\mikoo\Documents\python\python_final_pro\pies.jpg', target_size=(50, 50))
+plt.imshow(img)
+
+img_array = img_to_array(img)
+
+model.predict(img_array.reshape((1, 50, 50, 3)))
+# this is a dog
+
+model.summary()
+
+#additional points 6 random photos 
+
+pred = model.predict(X_test)
+pred = np.round(pred)
+corr_id = np.where(pred == y_test)[0]
+incorr_id = np.where(pred != y_test)[0]
+n_of_images = 6
+rndm_corr_id = np.random.choice(corr_id, n_of_images, replace=False)
+rndm_incorr_id = np.random.choice(incorr_id, n_of_images, replace=False)
+plt.figure(figsize=(50, 50))
+for i, idx in enumerate(rndm_corr_id):
+    plt.subplot(2, n_of_images, i + 1)
